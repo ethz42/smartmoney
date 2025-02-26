@@ -1,106 +1,97 @@
-import { Search, TrendingUp } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import Link from "next/link"
+'use client';
+import SearchForm from "@/components/SearchForm"
+import ResultsTable from "@/components/ResultsTable"
+import { useState } from 'react'
+import type { SearchResult } from "@/types/core/search";
+
+// interface SearchResult {
+//   rows: Array<Record<string, unknown>>;
+//   // ... other fields ...
+// }
 
 export default function Page() {
+  // 状态管理
+  const [searchData, setSearchData] = useState<SearchResult | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // 处理搜索完成回调
+  const handleSearchComplete = (data: SearchResult) => {
+    setSearchData(data)
+    setIsLoading(false)
+    setError(null)
+  }
+
+  // 处理搜索错误
+  const handleSearchError = (message: string) => {
+    setError(message)
+    setIsLoading(false)
+  }
+
   return (
     <div className="min-h-screen bg-[#1C1C1C] text-white">
-      {/* Navigation */}
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <Link href="/" className="flex items-center space-x-2">
-
-                {/* <span className="text-[#7FFFD4] font-semibold">PUMP.NEWS</span> */}
-              </Link>
-              {/* <div className="hidden md:flex items-center space-x-6">
-                <Link href="/search" className="text-gray-300 hover:text-white">
-                  Search
-                </Link>
-                <Link href="/trending" className="text-gray-300 hover:text-white">
-                  Trending
-                </Link>
-                <Link href="/trench" className="text-gray-300 hover:text-white">
-                  Trench
-                </Link>
-                <Link href="/feeds" className="text-gray-300 hover:text-white">
-                  Feeds
-                </Link>
-                <Link href="/watchlist" className="text-gray-300 hover:text-white">
-                  Watchlist
-                </Link>
-              </div> */}
-            </div>
-            <div className="flex items-center space-x-4">
-              {/* <Button variant="ghost" className="text-[#7FFFD4] hover:text-[#7FFFD4]/80">
-                Become PRO
-              </Button> */}
-              {/* <Button variant="outline" className="text-gray-300">
-                Log in
-              </Button>
-              <select className="bg-transparent border border-gray-800 rounded px-2 py-1">
-                <option value="SOL">SOL</option>
-                <option value="ETH">ETH</option>
-              </select> */}
-              {/* <select className="bg-transparent border border-gray-800 rounded px-2 py-1">
-                <option value="En">En</option>
-              </select> */}
-            </div>
+      <div className="container mx-auto px-4">
+        {/* Header 部分保持不变 */}
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center space-x-8">
+            <h2 className="text-xl font-bold">MemeRadar</h2>
           </div>
         </div>
+      </div>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-16 text-center">
-        <div className="max-w-3xl mx-auto space-y-12">
-          {/* Logo */}
+        <div className="max-w-4xl mx-auto space-y-12">
           <div className="space-y-4">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
+              Your Smart Money Radar
+            </h1>
+            <p className="text-xl text-gray-300">Track meme coins in real-time</p>
+          </div>
+
+          {/* 搜索区域 */}
+          <div className="space-y-8">
+            <SearchForm 
+              onSearchStart={() => {
+                setIsLoading(true)
+                setError(null)
+              }}
+              onSearchComplete={handleSearchComplete}
+              onSearchError={handleSearchError}
+            />
             
-            <h1 className="text-2xl text-gray-300">Your Smart Money Radar for Meme Coins</h1>
-          </div>
-
-          {/* Search */}
-          <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
-              <Input
-                type="text"
-                placeholder="Search CA or Ticker"
-                className="w-full bg-gray-900/50 border-gray-800 pl-12 h-12 rounded-lg"
-              />
-            </div>
-            <div className="flex items-center justify-center space-x-4">
-              <Button className="bg-[#1e3a3a] hover:bg-[#1e3a3a]/80 text-[#7FFFD4]">
-                <Search className="mr-2 h-4 w-4" />
-                Search
-              </Button>
-              <Button variant="link" className="text-[#7FFFD4]">
-                <TrendingUp className="mr-2 h-4 w-4" />
-                Trending
-              </Button>
-            </div>
-          </div>
-
-          {/* Coin Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {/* {["ZEREBRO", "arc", "BULLY", "CHILLGUY", "GRIFFAIN"].map((coin) => (
-              <div
-                key={coin}
-                className="bg-gray-900/30 p-4 rounded-lg border border-gray-800 hover:border-gray-700 transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-gray-800 rounded-full" />
-                  <div className="text-left">
-                    <div className="font-medium">{coin}</div>
-                    <div className="text-xs text-gray-500">8x5Vq...2Wn</div>
-                  </div>
+            {/* 状态展示区域 */}
+            {isLoading && (
+              <div className="py-8">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-4 bg-gray-700 rounded w-1/4"> </div>
+                  <div className="h-8 bg-gray-800 rounded"> </div>
                 </div>
               </div>
-            ))} */}
+            )}
+
+            {error && (
+              <div className="p-4 bg-red-800/30 rounded-lg border border-red-600/50 text-red-300">
+                ⚠️ {error}
+              </div>
+            )}
+
+            {/* 结果展示区域 */}
+            {searchData && (
+              <div className="text-left">
+                <h3 className="text-xl mb-4 font-mono text-gray-400">
+                  📊 Found {searchData.rows.length} address
+                </h3>
+                <div className="border border-gray-700/50 rounded-xl overflow-hidden">
+                  <ResultsTable 
+                    data={searchData}
+                    className="bg-gray-900/30" // 添加自定义class
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
     </div>
   )
 }
-
