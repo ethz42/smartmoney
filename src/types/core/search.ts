@@ -17,4 +17,5 @@ export interface SearchResult {
     total_row_count?: number;
     result_set_bytes?: number;
   };
+  fromCache?: boolean;
 }

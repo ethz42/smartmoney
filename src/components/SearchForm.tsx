@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { SearchResult } from '@/types/core/search';
+import { saveSearchResultAction } from '@/app/api/action';
 
 // interface SearchResult {
 //   rows: Array<unknown>;
@@ -31,6 +32,23 @@ export default function SearchForm({
       setIsLoading(true)
       onSearchStart()
 
+      // 尝试从数据库获取缓存数据或从 API 获取新数据
+      const saveResult = await saveSearchResultAction(inputValue, { rows: [], metadata: { column_names: [] } });
+      
+      // 如果从数据库获取到了缓存数据
+      if (saveResult.success && saveResult.data && saveResult.data.fromCache) {
+        console.log('Using cached results from database');
+        // 使用缓存数据
+        const cachedData = {
+          rows: saveResult.data.rows,
+          metadata: saveResult.data.metadata
+        };
+        onSearchComplete(cachedData);
+        setIsLoading(false);
+        return;
+      }
+      
+      // 如果没有缓存数据，从 API 获取新数据
       const response = await fetch('/api/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -42,6 +60,15 @@ export default function SearchForm({
       }
 
       const { data } = await response.json()
+      
+      // 保存新数据到数据库
+      const updateResult = await saveSearchResultAction(inputValue, data);
+      if (!updateResult.success) {
+        console.warn('Failed to save search results to database:', updateResult.error);
+      } else {
+        console.log('Search results saved to database');
+      }
+      
       onSearchComplete(data)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch data'
