@@ -46,7 +46,7 @@ export default function Page() {
         {/* Header 部分保持不变 */}
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
-            <h2 className="text-xl font-bold">MemeRadar</h2>
+            {/* <h2 className="text-xl font-bold">Smart Money Radar</h2> */}
           </div>
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function Page() {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
               Your Smart Money Radar
             </h1>
-            <p className="text-xl text-gray-300">Track meme coins in real-time</p>
+            {/* <p className="text-xl text-gray-300">Track meme coins in real-time</p> */}
           </div>
 
           {/* 搜索区域 */}

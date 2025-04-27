@@ -3,7 +3,9 @@
 import { createClient } from '@/libs/supabase/client';
 import { revalidatePath } from 'next/cache';
 import type { SearchResult } from '@/types/core/search';
+import { QueryParameter, DuneClient, type RunQueryArgs } from "@duneanalytics/client-sdk";
 
+const dune = new DuneClient("JlbyLiMGtYW45JZPRrOoAziFYdpvhCLf");
 /**
  * 将搜索结果保存到数据库
  */
@@ -136,19 +138,69 @@ export async function getTraderAnalysisAction(address: string) {
     }
     
     // 2. 获取交易记录
-    const { data: tradeRecords, error: tradeError } = await supabase
-      .from('smart_money_stats')
-      .select('*')
-      .eq('address', address)
-      .single();
+    // const { data: tradeRecords, error: tradeError } = await supabase
+    //   .from('smart_money_stats')
+    //   .select('*')
+    //   .eq('address', address)
+    //   .single();
     
-    if (tradeError) {
-      console.error('Error fetching trade records:', tradeError);
-      return { 
-        success: false, 
-        error: '获取交易记录失败' 
-      };
-    }
+    // if (tradeError) {
+    //   console.error('Error fetching trade records:', tradeError);
+    //   return { 
+    //     success: false, 
+    //     error: '获取交易记录失败' 
+    //   };
+    // }
+    const getTradeRecords = async (address: string) => {
+      try {
+          const queryId = 4759864;
+          const opts: RunQueryArgs = {
+              queryId,
+              query_parameters: [
+                QueryParameter.text("trader_id", address),
+              ],
+            };
+          const query_result = await dune.runQuery(opts);
+          
+          let tradeRecords = '';
+          interface TradeRow {
+            block_time: string;
+            token_bought_symbol: string;
+            token_bought_amount: number;
+            token_sold_symbol: string;
+            token_sold_amount: number;
+            amount_usd: number;
+          }
+          const rawRows = query_result.result?.rows ?? [];
+          const rows: TradeRow[] = rawRows.map(row => row as unknown as TradeRow);
+          for (const row of rows) {
+              const time = row.block_time.substring(0, 16);
+              const token_buy = row.token_bought_symbol;
+              const buy_amount = row.token_bought_amount;
+              const token_sell = row.token_sold_symbol;
+              const sell_amount = row.token_sold_amount;
+              const amount_usd = row.amount_usd;
+  
+              const isBuyTokenValid = (token_buy === 'SOL' || token_buy === 'USDT');
+              const isSellTokenValid = (token_sell === 'SOL' || token_sell === 'USDT');
+  
+              if (isBuyTokenValid && !isSellTokenValid) {
+                  const price = amount_usd / sell_amount;
+                  tradeRecords += `time: ${time} sell ${token_sell} price ${price} amount ${sell_amount} `;
+              } else if (isSellTokenValid && !isBuyTokenValid) {
+                  const price = amount_usd / buy_amount;
+                  tradeRecords += `time: ${time} buy ${token_buy} price ${price} amount ${buy_amount} `;
+              }
+          }
+          return tradeRecords;
+      } catch (error) {
+          console.error('Error get records', error);
+          throw new Error('Error get records');
+      }
+  } 
+
+    const tradeRecords = getTradeRecords(address)
+
     // 3. 调用 AI API 进行分析
     const aiQuery = `evaluate this trader within 110 words: ${JSON.stringify(tradeRecords)}`;
     
